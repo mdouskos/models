@@ -290,6 +290,7 @@ def main(unused_argv):
   tf.logging.info('Training on %s set', FLAGS.train_split)
 
   with tf.Graph().as_default() as graph:
+    print(config.inputs_device())
     with tf.device(config.inputs_device()):
       dataset = data_generator.Dataset(
           dataset_name=FLAGS.dataset,
