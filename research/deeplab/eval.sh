@@ -34,7 +34,7 @@ mkdir -p "${EVAL_LOGDIR}"
 mkdir -p "${VIS_LOGDIR}"
 mkdir -p "${EXPORT_DIR}"
 
-PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord${2}"
+PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord${3}"
 
 # Run evaluation. 
 python "${WORK_DIR}"/eval.py \
@@ -51,4 +51,4 @@ python "${WORK_DIR}"/eval.py \
   --eval_logdir="${EVAL_LOGDIR}" \
   --dataset_dir="${PASCAL_DATASET}" \
   --max_number_of_evaluations=0 \
-  --eval_interval_secs=2400
+  --eval_interval_secs=${2}

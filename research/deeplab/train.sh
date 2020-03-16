@@ -42,13 +42,13 @@ wget -nd -c "${TF_INIT_ROOT}/${TF_INIT_CKPT}"
 tar -xf "${TF_INIT_CKPT}"
 cd "${CURRENT_DIR}"
 
-PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord${2}"
+PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord${3}"
 
 # Train 10 iterations.
-NUM_ITERATIONS=65000
+NUM_ITERATIONS=${2}
 python "${WORK_DIR}"/train.py \
   --logtostderr \
-  --train_split="train_aug" \
+  --train_split="train_sample-5" \
   --model_variant="resnet_v1_101_beta" \
   --atrous_rates=6 \
   --atrous_rates=12 \
