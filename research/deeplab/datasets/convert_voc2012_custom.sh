@@ -49,10 +49,12 @@ PASCAL_ROOT="${WORK_DIR}/VOCdevkit/VOC2012"
 SEG_FOLDER="${PASCAL_ROOT}/Segmentation${1}"
 SEMANTIC_SEG_FOLDER="${PASCAL_ROOT}/Segmentation${1}Raw"
 
-echo "Removing the color map in ground truth annotations..."
-python ./remove_gt_colormap.py \
-  --original_gt_folder="${SEG_FOLDER}" \
-  --output_dir="${SEMANTIC_SEG_FOLDER}"
+if [ ! -d ${SEMANTIC_SEG_FOLDER} ]; then
+  echo "Removing the color map in ground truth annotations..."
+  python ./remove_gt_colormap.py \
+    --original_gt_folder="${SEG_FOLDER}" \
+    --output_dir="${SEMANTIC_SEG_FOLDER}"
+fi
 
 # Build TFRecords of the dataset.
 # First, create output directory for storing TFRecords.
