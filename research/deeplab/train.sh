@@ -64,6 +64,22 @@ python "${WORK_DIR}"/train.py \
   --train_logdir="${TRAIN_LOGDIR}" \
   --dataset_dir="${PASCAL_DATASET}${3}"
 
+# Visualize the results.
+python "${WORK_DIR}"/vis.py \
+  --logtostderr \
+  --vis_split="val" \
+  --model_variant="resnet_v1_101_beta" \
+  --atrous_rates=6 \
+  --atrous_rates=12 \
+  --atrous_rates=18 \
+  --output_stride=16 \
+  --decoder_output_stride=4 \
+  --vis_crop_size="513,513" \
+  --checkpoint_dir="${TRAIN_LOGDIR}" \
+  --vis_logdir="${VIS_LOGDIR}" \
+  --dataset_dir="${PASCAL_DATASET}" \
+  --max_number_of_iterations=1
+  
 # Run evaluation. This performs eval over the full val split (1449 images) and
 # will take a while.
 # Using the provided checkpoint, one should expect mIOU=82.20%.
@@ -81,19 +97,3 @@ python "${WORK_DIR}"/eval.py \
   --eval_logdir="${EVAL_LOGDIR}" \
   --dataset_dir="${PASCAL_DATASET}" \
   --max_number_of_evaluations=1
-
-# Visualize the results.
-python "${WORK_DIR}"/vis.py \
-  --logtostderr \
-  --vis_split="val" \
-  --model_variant="resnet_v1_101_beta" \
-  --atrous_rates=6 \
-  --atrous_rates=12 \
-  --atrous_rates=18 \
-  --output_stride=16 \
-  --decoder_output_stride=4 \
-  --vis_crop_size="513,513" \
-  --checkpoint_dir="${TRAIN_LOGDIR}" \
-  --vis_logdir="${VIS_LOGDIR}" \
-  --dataset_dir="${PASCAL_DATASET}" \
-  --max_number_of_iterations=1
