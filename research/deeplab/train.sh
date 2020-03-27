@@ -42,13 +42,13 @@ wget -nd -c "${TF_INIT_ROOT}/${TF_INIT_CKPT}"
 tar -xf "${TF_INIT_CKPT}"
 cd "${CURRENT_DIR}"
 
-PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord${3}"
+PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord"
 
 # Train 10 iterations.
 NUM_ITERATIONS=${2}
 python "${WORK_DIR}"/train.py \
   --logtostderr \
-  --train_split="train_sample-5" \
+  --train_split="train_aug" \
   --model_variant="resnet_v1_101_beta" \
   --atrous_rates=6 \
   --atrous_rates=12 \
@@ -62,7 +62,7 @@ python "${WORK_DIR}"/train.py \
   --fine_tune_batch_norm=true \
   --tf_initial_checkpoint="${INIT_FOLDER}/resnet_v1_101/model.ckpt" \
   --train_logdir="${TRAIN_LOGDIR}" \
-  --dataset_dir="${PASCAL_DATASET}"
+  --dataset_dir="${PASCAL_DATASET}${3}"
 
 # Run evaluation. This performs eval over the full val split (1449 images) and
 # will take a while.
