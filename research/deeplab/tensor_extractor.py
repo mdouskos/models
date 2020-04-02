@@ -238,11 +238,14 @@ def main(unused_argv):
   tf.gfile.MakeDirs(FLAGS.ext_logdir)
   tensor_save_dir = os.path.join(FLAGS.ext_logdir, _TENSOR_SAVE_FOLDER)
   tf.gfile.MakeDirs(tensor_save_dir)
-  save_dir = os.path.join(FLAGS.ext_logdir, _SEMANTIC_PREDICTION_SAVE_FOLDER)
-  tf.gfile.MakeDirs(save_dir)
-  raw_save_dir = os.path.join(
-      FLAGS.ext_logdir, _RAW_SEMANTIC_PREDICTION_SAVE_FOLDER)
-  tf.gfile.MakeDirs(raw_save_dir)
+  save_dir = None
+  raw_save_dir = None
+  if FLAGS.also_save_images:
+    save_dir = os.path.join(FLAGS.ext_logdir, _SEMANTIC_PREDICTION_SAVE_FOLDER)
+    tf.gfile.MakeDirs(save_dir)
+    raw_save_dir = os.path.join(
+        FLAGS.ext_logdir, _RAW_SEMANTIC_PREDICTION_SAVE_FOLDER)
+    tf.gfile.MakeDirs(raw_save_dir)
 
   tf.logging.info('Extracting on %s set', FLAGS.ext_split)
 

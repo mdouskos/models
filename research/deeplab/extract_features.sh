@@ -15,7 +15,6 @@ WORK_DIR="${CURRENT_DIR}/deeplab"
 
 # Go to datasets folder and download PASCAL VOC 2012 segmentation dataset.
 DATASET_DIR="datasets"
-cd "${WORK_DIR}/${DATASET_DIR}"
 
 # Go back to original directory.
 cd "${CURRENT_DIR}"
@@ -26,8 +25,6 @@ EXP_FOLDER="exp/${1}"
 INIT_FOLDER="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/init_models"
 TRAIN_LOGDIR="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/${EXP_FOLDER}/train"
 EXPORT_DIR="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/${EXP_FOLDER}/export"
-mkdir -p "${INIT_FOLDER}"
-mkdir -p "${TRAIN_LOGDIR}"
 mkdir -p "${EXPORT_DIR}"
 
 # Copy locally the trained checkpoint as the initial checkpoint.
@@ -42,7 +39,7 @@ PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord${2}"
 
 # Visualize the results.
 python "${WORK_DIR}"/tensor_extractor.py \
-    --eval_split="val" \
+    --ext_split="train_aug" \
     --model_variant="resnet_v1_101_beta" \
     --atrous_rates=6 \
     --atrous_rates=12 \
