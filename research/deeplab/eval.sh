@@ -15,7 +15,6 @@ WORK_DIR="${CURRENT_DIR}/deeplab"
 
 # Go to datasets folder and download PASCAL VOC 2012 segmentation dataset.
 DATASET_DIR="datasets"
-cd "${WORK_DIR}/${DATASET_DIR}"
 
 # Go back to original directory.
 cd "${CURRENT_DIR}"
@@ -26,15 +25,16 @@ EXP_FOLDER="exp/${1}"
 INIT_FOLDER="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/init_models"
 TRAIN_LOGDIR="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/${EXP_FOLDER}/train"
 EVAL_LOGDIR="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/${EXP_FOLDER}/eval"
-VIS_LOGDIR="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/${EXP_FOLDER}/vis"
-EXPORT_DIR="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/${EXP_FOLDER}/export"
-mkdir -p "${INIT_FOLDER}"
-mkdir -p "${TRAIN_LOGDIR}"
 mkdir -p "${EVAL_LOGDIR}"
-mkdir -p "${VIS_LOGDIR}"
-mkdir -p "${EXPORT_DIR}"
 
 PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord"
+
+if [ -z "${2}" ] 
+then
+  { EVALUATIONS=1; INTERVAL=0; } 
+else 
+  { EVALUATIONS=0; INTERVAL=${2}; }
+fi
 
 # Run evaluation. 
 python "${WORK_DIR}"/eval.py \
@@ -50,5 +50,5 @@ python "${WORK_DIR}"/eval.py \
   --checkpoint_dir="${TRAIN_LOGDIR}" \
   --eval_logdir="${EVAL_LOGDIR}" \
   --dataset_dir="${PASCAL_DATASET}" \
-  --max_number_of_evaluations=0 \
-  --eval_interval_secs=${2}
+  --max_number_of_evaluations=$EVALUATIONS \
+  --eval_interval_secs=$INTERVAL
