@@ -138,7 +138,8 @@ class Dataset(object):
                num_readers=1,
                is_training=False,
                should_shuffle=False,
-               should_repeat=False):
+               should_repeat=False,
+               confidences=False):
     """Initializes the dataset.
 
     Args:
@@ -195,6 +196,7 @@ class Dataset(object):
     self.is_training = is_training
     self.should_shuffle = should_shuffle
     self.should_repeat = should_repeat
+    self.confidences = confidences
 
     self.num_of_classes = _DATASETS_INFORMATION[self.dataset_name].num_classes
     self.ignore_label = _DATASETS_INFORMATION[self.dataset_name].ignore_label
@@ -239,6 +241,9 @@ class Dataset(object):
             tf.FixedLenFeature((), tf.string, default_value='png'),
     }
 
+    if self.confidences:
+      features['image/confidence'] = tf.VarLenFeature(tf.float32)
+
     parsed_features = tf.parse_single_example(example_proto, features)
 
     image = _decode_image(parsed_features['image/encoded'], channels=3)
@@ -272,6 +277,14 @@ class Dataset(object):
 
       sample[common.LABELS_CLASS] = label
 
+
+    if self.confidences:
+      confidence = tf.sparse_tensor_to_dense(parsed_features['image/confidence'])
+      confidence = tf.reshape(confidence, 
+                  (parsed_features['image/height'], parsed_features['image/width']))
+      confidence = tf.expand_dims(confidence, 2)
+      sample['confidence'] = confidence
+      
     return sample
 
   def _preprocess_image(self, sample):
@@ -288,10 +301,15 @@ class Dataset(object):
     """
     image = sample[common.IMAGE]
     label = sample[common.LABELS_CLASS]
+    
+    confidence = None
+    if self.confidences is not None:
+      confidence = sample['confidence']
 
-    original_image, image, label = input_preprocess.preprocess_image_and_label(
+    original_image, image, label, confidence = input_preprocess.preprocess_image_and_label(
         image=image,
         label=label,
+        confidence=confidence,
         crop_height=self.crop_size[0],
         crop_width=self.crop_size[1],
         min_resize_value=self.min_resize_value,
@@ -313,6 +331,9 @@ class Dataset(object):
     if label is not None:
       sample[common.LABEL] = label
 
+    if confidence is not None:
+      sample['confidence'] = confidence
+    
     # Remove common.LABEL_CLASS key in the sample since it is only used to
     # derive label and not used in training and evaluation.
     sample.pop(common.LABELS_CLASS, None)

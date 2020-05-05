@@ -217,6 +217,8 @@ flags.DEFINE_string('train_split', 'train',
 
 flags.DEFINE_string('dataset_dir', None, 'Where the dataset reside.')
 
+flags.DEFINE_boolean('use_confidence', False,
+                     'Weight loss values based on label confidences.')
 
 def _build_deeplab(iterator, outputs_to_num_classes, ignore_label):
   """Builds a clone of DeepLab.
@@ -308,7 +310,8 @@ def main(unused_argv):
           num_readers=4,
           is_training=True,
           should_shuffle=True,
-          should_repeat=True)
+          should_repeat=True,
+          confidences=FLAGS.use_confidence)
 
     # Create the global step on the device storing the variables.
     with tf.device(config.variables_device()):

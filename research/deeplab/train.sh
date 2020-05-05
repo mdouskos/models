@@ -59,6 +59,8 @@ python "${WORK_DIR}"/train.py \
   --train_batch_size=8 \
   --training_number_of_steps="${NUM_ITERATIONS}" \
   --base_learning_rate=0.003 \
+  --weight_decay=0.0001 \
+  --use_confidence=true \
   --fine_tune_batch_norm=true \
   --tf_initial_checkpoint="${INIT_FOLDER}/resnet_v1_101/model.ckpt" \
   --train_logdir="${TRAIN_LOGDIR}" \

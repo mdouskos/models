@@ -37,7 +37,8 @@ def preprocess_image_and_label(image,
                                scale_factor_step_size=0,
                                ignore_label=255,
                                is_training=True,
-                               model_variant=None):
+                               model_variant=None,
+                               confidence=None):
   """Preprocesses the image and label.
 
   Args:
@@ -121,19 +122,40 @@ def preprocess_image_and_label(image,
     label = preprocess_utils.pad_to_bounding_box(
         label, 0, 0, target_height, target_width, ignore_label)
 
+  if confidence is not None:
+    confidence = preprocess_utils.pad_to_bounding_box(
+        confidence, 0, 0, target_height, target_width, 0)
+
   # Randomly crop the image and label.
   if is_training and label is not None:
-    processed_image, label = preprocess_utils.random_crop(
-        [processed_image, label], crop_height, crop_width)
+    im_list = [processed_image, label]
+    if confidence is not None:
+      im_list.append(confidence)
+    out_list = preprocess_utils.random_crop(
+        im_list, crop_height, crop_width)
+    processed_image = out_list[0]
+    label = out_list[1]
+    if confidence is not None:
+      confidence = out_list[2]
 
   processed_image.set_shape([crop_height, crop_width, 3])
 
   if label is not None:
     label.set_shape([crop_height, crop_width, 1])
 
+  if confidence is not None:
+    confidence.set_shape([crop_height, crop_width, 1])
+
   if is_training:
     # Randomly left-right flip the image and label.
-    processed_image, label, _ = preprocess_utils.flip_dim(
-        [processed_image, label], _PROB_OF_FLIP, dim=1)
+    t_list = [processed_image, label]
+    if confidence is not None:
+      t_list.append(confidence)
+    out_list = preprocess_utils.flip_dim(
+        t_list, _PROB_OF_FLIP, dim=1)
+    processed_image = out_list[0]
+    label = out_list[1]
+    if confidence is not None:
+      confidence = out_list[2]
 
-  return original_image, processed_image, label
+  return original_image, processed_image, label, confidence
