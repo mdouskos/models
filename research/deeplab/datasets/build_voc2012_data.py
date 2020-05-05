@@ -60,6 +60,7 @@ import sys
 import build_data
 from six.moves import range
 import tensorflow as tf
+import numpy as np
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -71,6 +72,11 @@ tf.app.flags.DEFINE_string(
     'semantic_segmentation_folder',
     './VOCdevkit/VOC2012/SegmentationClassRaw',
     'Folder containing semantic segmentation annotations.')
+
+tf.app.flags.DEFINE_string(
+    'confidences_folder',
+    '',
+    'Folder containing per-pixel label confidence values.')
 
 tf.app.flags.DEFINE_string(
     'list_folder',
@@ -128,9 +134,20 @@ def _convert_dataset(dataset_split):
         seg_height, seg_width = label_reader.read_image_dims(seg_data)
         if height != seg_height or width != seg_width:
           raise RuntimeError('Shape mismatched between image and label.')
+        if len(FLAGS.confidences_folder) > 0:
+          conf_filename = os.path.join(
+              FLAGS.confidences_folder,
+              filenames[i] + '.' + FLAGS.confidence_format)
+          conf_data = np.load(conf_filename)
+          conf_height, conf_width = conf_data.shape
+          if height != conf_height or width != conf_width:
+            raise RuntimeError('Shape mismatched between image and confidence map.')
+          conf_data = np.reshape(conf_data, (height*width,))
+        else:
+          conf_data = None
         # Convert to tf example.
         example = build_data.image_seg_to_tfexample(
-            image_data, filenames[i], height, width, seg_data)
+            image_data, filenames[i], height, width, seg_data, conf_data)
         tfrecord_writer.write(example.SerializeToString())
     sys.stdout.write('\n')
     sys.stdout.flush()
