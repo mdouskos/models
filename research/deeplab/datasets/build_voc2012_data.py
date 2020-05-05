@@ -138,11 +138,15 @@ def _convert_dataset(dataset_split):
           conf_filename = os.path.join(
               FLAGS.confidences_folder,
               filenames[i] + '.' + FLAGS.confidence_format)
-          conf_data = np.load(conf_filename)
-          conf_height, conf_width = conf_data.shape
+          if FLAGS.confidence_format == 'npy':
+            conf_data = np.load(conf_filename)
+            conf_height, conf_width = conf_data.shape
+            conf_data = np.reshape(conf_data, (conf_height*conf_width,))
+          else: 
+            conf_data = tf.gfile.GFile(conf_filename, 'rb').read()
+            conf_height, conf_width = label_reader.read_image_dims(conf_data)
           if height != conf_height or width != conf_width:
             raise RuntimeError('Shape mismatched between image and confidence map.')
-          conf_data = np.reshape(conf_data, (height*width,))
         else:
           conf_data = None
         # Convert to tf example.

@@ -62,7 +62,7 @@ OUTPUT_DIR="${WORK_DIR}/tfrecord${2}"
 mkdir -p "${OUTPUT_DIR}"
 
 IMAGE_FOLDER="${PASCAL_ROOT}/JPEGImages"
-LIST_FOLDER="${PASCAL_ROOT}/ImageSets/Segmentation"
+LIST_FOLDER="${PASCAL_ROOT}/ImageSets/SegmentationMin"
 CONFIDENCES_FOLDER="${PASCAL_ROOT}/Confidences"
 
 echo "Converting PASCAL VOC 2012 dataset..."

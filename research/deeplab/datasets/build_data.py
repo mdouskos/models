@@ -41,7 +41,7 @@ tf.app.flags.DEFINE_enum('image_format', 'png', ['jpg', 'jpeg', 'png'],
 tf.app.flags.DEFINE_enum('label_format', 'png', ['png'],
                          'Segmentation label format.')
 
-tf.app.flags.DEFINE_enum('confidence_format', 'npy', ['npy'],
+tf.app.flags.DEFINE_enum('confidence_format', 'png', ['npy', 'png'],
                         'Confidence format.')
 
 # A map from image format to expected data format.
@@ -160,8 +160,12 @@ def image_seg_to_tfexample(image_data, filename, height, width, seg_data, conf_d
       'image/segmentation/class/encoded': (
           _bytes_list_feature(seg_data)),
       'image/segmentation/class/format': _bytes_list_feature(
-          FLAGS.label_format),
+          FLAGS.label_format)
   }
   if conf_data is not None:
-    feature['image/confidence'] = tf.train.Feature(float_list=tf.train.FloatList(value=conf_data))
+    feature['image/confidence/format'] = _bytes_list_feature(FLAGS.confidence_format)
+    if FLAGS.confidence_format == 'npy':
+      feature['image/confidence'] = tf.train.Feature(float_list=tf.train.FloatList(value=conf_data))
+    else:
+      feature['image/confidence/encoded'] = (_bytes_list_feature(conf_data))
   return tf.train.Example(features=tf.train.Features(feature=feature))
