@@ -86,11 +86,11 @@ _PASCAL_VOC_SEG_INFORMATION = DatasetDescriptor(
         'train_aug_val': 12031,
         'trainval': 2913,
         'val': 1449,
-        'train_sample': 883,
-        'train_sample-5': 100,
-        'train_sample-10': 200,
-        'train_sample-20': 400,
-        'train_sample-50': 1000,
+        # 'train_sample': 883,
+        # 'train_sample-5': 100,
+        # 'train_sample-10': 200,
+        # 'train_sample-20': 400,
+        # 'train_sample-50': 1000,
     },
     num_classes=21,
     ignore_label=255,
@@ -163,6 +163,7 @@ class Dataset(object):
       is_training: Boolean, if dataset is for training or not.
       should_shuffle: Boolean, if should shuffle the input data.
       should_repeat: Boolean, if should repeat the input data.
+      confidences: Boolean, if should use label confidence map.
 
     Raises:
       ValueError: Dataset name and split name are not supported.
@@ -218,11 +219,11 @@ class Dataset(object):
     # Need to use this logic because the shape is not known for
     # tf.image.decode_image and we rely on this info to
     # extend label if necessary.
-    def _decode_image(content, channels):
+    def _decode_image(content, channels, dtype=tf.uint8):
       return tf.cond(
           tf.image.is_jpeg(content),
-          lambda: tf.image.decode_jpeg(content, channels),
-          lambda: tf.image.decode_png(content, channels))
+          lambda: tf.cast(tf.image.decode_jpeg(content, channels), dtype),
+          lambda: tf.image.decode_png(content, channels, dtype))
 
     features = {
         'image/encoded':
@@ -242,16 +243,26 @@ class Dataset(object):
     }
 
     if self.confidences:
-      features['image/confidence'] = tf.VarLenFeature(tf.float32)
+      # features['image/confidence'] = tf.VarLenFeature(tf.float32)
+      features['image/confidence/encoded'] = tf.FixedLenFeature((), tf.string, default_value='')
+      features['image/confidence/format'] = tf.FixedLenFeature((), tf.string, default_value='png')
 
     parsed_features = tf.parse_single_example(example_proto, features)
 
     image = _decode_image(parsed_features['image/encoded'], channels=3)
 
     label = None
+    confidence = None
     if self.split_name != common.TEST_SET:
       label = _decode_image(
           parsed_features['image/segmentation/class/encoded'], channels=1)
+      if self.confidences: 
+        # TODO: confidence in npy format not fully supported yet
+        # confidence = tf.sparse_tensor_to_dense(parsed_features['image/confidence'])
+        # confidence = tf.reshape(confidence, 
+        #             (parsed_features['image/height'], parsed_features['image/width']))
+        confidence = _decode_image(
+            parsed_features['image/confidence/encoded'], channels=1, dtype=tf.uint16)
 
     image_name = parsed_features['image/filename']
     if image_name is None:
@@ -277,13 +288,18 @@ class Dataset(object):
 
       sample[common.LABELS_CLASS] = label
 
-
-    if self.confidences:
-      confidence = tf.sparse_tensor_to_dense(parsed_features['image/confidence'])
-      confidence = tf.reshape(confidence, 
-                  (parsed_features['image/height'], parsed_features['image/width']))
-      confidence = tf.expand_dims(confidence, 2)
-      sample['confidence'] = confidence
+    if confidence is not None:
+      if confidence.get_shape().ndims == 2:
+        confidence = tf.expand_dims(confidence, 2)
+      elif confidence.get_shape().ndims == 3 and confidence.shape.dims[2] == 1:
+        pass
+      else:
+        raise ValueError('Input confidence shape must be [height, width], or '
+                  '[height, width, 1].')
+      
+      confidence.set_shape([None, None, 1])
+      
+      sample[common.CONFIDENCE] = confidence
       
     return sample
 
@@ -301,10 +317,10 @@ class Dataset(object):
     """
     image = sample[common.IMAGE]
     label = sample[common.LABELS_CLASS]
-    
+
     confidence = None
-    if self.confidences is not None:
-      confidence = sample['confidence']
+    if self.confidences:
+      confidence = sample[common.CONFIDENCE]
 
     original_image, image, label, confidence = input_preprocess.preprocess_image_and_label(
         image=image,
@@ -332,7 +348,7 @@ class Dataset(object):
       sample[common.LABEL] = label
 
     if confidence is not None:
-      sample['confidence'] = confidence
+      sample[common.CONFIDENCE] = confidence
     
     # Remove common.LABEL_CLASS key in the sample since it is only used to
     # derive label and not used in training and evaluation.

@@ -353,12 +353,13 @@ def get_random_scale(min_scale_factor, max_scale_factor, step_size):
   return shuffled_scale_factors[0]
 
 
-def randomly_scale_image_and_label(image, label=None, scale=1.0):
+def randomly_scale_image_and_label(image, label=None, confidence=None, scale=1.0):
   """Randomly scales image and label.
 
   Args:
     image: Image with shape [height, width, 3].
     label: Label with shape [height, width, 1].
+    confidence: Confidence map with shape [height, width, 1].
     scale: The value to scale image and label.
 
   Returns:
@@ -384,8 +385,15 @@ def randomly_scale_image_and_label(image, label=None, scale=1.0):
         new_dim,
         method=get_label_resize_method(label),
         align_corners=True)
+  
+  if confidence is not None:
+    confidence = tf.image.resize(
+      confidence,
+      new_dim,
+      method=get_label_resize_method(confidence),
+      align_corners=True)
 
-  return image, label
+  return image, label, confidence
 
 
 def resolve_shape(tensor, rank=None, scope=None):
@@ -419,6 +427,7 @@ def resolve_shape(tensor, rank=None, scope=None):
 
 def resize_to_range(image,
                     label=None,
+                    confidence=None,
                     min_size=None,
                     max_size=None,
                     factor=None,
@@ -441,6 +450,7 @@ def resize_to_range(image,
     image: A 3D tensor of shape [height, width, channels].
     label: (optional) A 3D tensor of shape [height, width, channels] (default)
       or [channels, height, width] when label_layout_is_chw = True.
+    confidence: (optional) A 3D tensor of shape [height, width, channels].
     min_size: (scalar) desired size of the smaller image side.
     max_size: (scalar) maximum allowed size of the larger image side. Note
       that the output dimension is no larger than max_size and may be slightly
@@ -528,6 +538,15 @@ def resize_to_range(image,
             method=get_label_resize_method(label),
             align_corners=align_corners)
       new_tensor_list.append(resized_label)
+    else:
+      new_tensor_list.append(None)
+    if confidence is not None:
+      resized_confidence = tf.image.resize(
+              confidence,
+              new_size,
+              method=get_label_resize_method(confidence),
+              align_corners=align_corners)
+      new_tensor_list.append(resized_confidence)
     else:
       new_tensor_list.append(None)
     return new_tensor_list

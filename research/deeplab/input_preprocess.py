@@ -27,6 +27,7 @@ _PROB_OF_FLIP = 0.5
 
 def preprocess_image_and_label(image,
                                label,
+                               confidence,
                                crop_height,
                                crop_width,
                                min_resize_value=None,
@@ -37,8 +38,7 @@ def preprocess_image_and_label(image,
                                scale_factor_step_size=0,
                                ignore_label=255,
                                is_training=True,
-                               model_variant=None,
-                               confidence=None):
+                               model_variant=None):
   """Preprocesses the image and label.
 
   Args:
@@ -83,12 +83,17 @@ def preprocess_image_and_label(image,
   if label is not None:
     label = tf.cast(label, tf.int32)
 
+  if confidence is not None:
+    if confidence.dtype == tf.uint16:
+      confidence = tf.cast(confidence, tf.float32) / 65535
+
   # Resize image and label to the desired range.
   if min_resize_value or max_resize_value:
-    [processed_image, label] = (
+    [processed_image, label, confidence] = (
         preprocess_utils.resize_to_range(
             image=processed_image,
             label=label,
+            confidence=confidence,
             min_size=min_resize_value,
             max_size=max_resize_value,
             factor=resize_factor,
@@ -100,8 +105,8 @@ def preprocess_image_and_label(image,
   if is_training:
     scale = preprocess_utils.get_random_scale(
         min_scale_factor, max_scale_factor, scale_factor_step_size)
-    processed_image, label = preprocess_utils.randomly_scale_image_and_label(
-        processed_image, label, scale)
+    processed_image, label, confidence = preprocess_utils.randomly_scale_image_and_label(
+        processed_image, label, confidence, scale)
     processed_image.set_shape([None, None, 3])
 
   # Pad image and label to have dimensions >= [crop_height, crop_width]
