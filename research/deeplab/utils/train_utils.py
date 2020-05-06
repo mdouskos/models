@@ -39,7 +39,8 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
                                                   hard_example_mining_step=0,
                                                   top_k_percent_pixels=1.0,
                                                   gt_is_matting_map=False,
-                                                  scope=None):
+                                                  scope=None,
+                                                  confidences=None):
   """Adds softmax cross entropy loss for logits of each scale.
 
   Args:
@@ -73,6 +74,9 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
   """
   if labels is None:
     raise ValueError('No label for softmax cross entropy loss.')
+
+  if confidences is not None:
+    tconf = tf.identity(confidences)
 
   # If input groundtruth is a matting map of confidence, check if the input
   # labels are floating point values.

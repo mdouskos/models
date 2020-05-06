@@ -60,8 +60,9 @@ python "${WORK_DIR}"/train.py \
   --training_number_of_steps="${NUM_ITERATIONS}" \
   --base_learning_rate=0.003 \
   --weight_decay=0.0001 \
-  --use_confidence=true \
+  --use_confidence=false \
   --fine_tune_batch_norm=true \
+  --save_summaries_images=false \
   --tf_initial_checkpoint="${INIT_FOLDER}/resnet_v1_101/model.ckpt" \
   --train_logdir="${TRAIN_LOGDIR}" \
   --dataset_dir="${PASCAL_DATASET}${3}"

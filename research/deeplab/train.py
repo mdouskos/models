@@ -235,6 +235,10 @@ def _build_deeplab(iterator, outputs_to_num_classes, ignore_label):
   # Add name to input and label nodes so we can add to summary.
   samples[common.IMAGE] = tf.identity(samples[common.IMAGE], name=common.IMAGE)
   samples[common.LABEL] = tf.identity(samples[common.LABEL], name=common.LABEL)
+  samples[common.CONFIDENCE] = None
+
+  if FLAGS.use_confidence:
+    samples[common.CONFIDENCE] = tf.identity(samples[common.CONFIDENCE], name=common.CONFIDENCE)
 
   model_options = common.ModelOptions(
       outputs_to_num_classes=outputs_to_num_classes,
@@ -269,7 +273,8 @@ def _build_deeplab(iterator, outputs_to_num_classes, ignore_label):
         upsample_logits=FLAGS.upsample_logits,
         hard_example_mining_step=FLAGS.hard_example_mining_step,
         top_k_percent_pixels=FLAGS.top_k_percent_pixels,
-        scope=output)
+        scope=output,
+        confidences=samples[common.CONFIDENCE])
 
 
 def main(unused_argv):
@@ -350,6 +355,15 @@ def main(unused_argv):
       summary_label = tf.cast(first_clone_label * pixel_scaling, tf.uint8)
       summaries.add(
           tf.summary.image('samples/%s' % common.LABEL, summary_label))
+
+      if FLAGS.use_confidence:  
+        first_clone_confidence = graph.get_tensor_by_name(
+            ('%s/%s:0' % (first_clone_scope, common.CONFIDENCE)).strip('/'))
+        # Scale up summary image pixel values for better visualization.
+        summary_confidence = first_clone_confidence
+        #summary_confidence = tf.cast(first_clone_confidence, tf.uint16)
+        summaries.add(
+            tf.summary.image('samples/%s' % common.CONFIDENCE, summary_confidence))
 
       first_clone_output = graph.get_tensor_by_name(
           ('%s/%s:0' % (first_clone_scope, common.OUTPUT_TYPE)).strip('/'))
