@@ -75,9 +75,6 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
   if labels is None:
     raise ValueError('No label for softmax cross entropy loss.')
 
-  if confidences is not None:
-    tconf = tf.identity(confidences)
-
   # If input groundtruth is a matting map of confidence, check if the input
   # labels are floating point values.
   if gt_is_matting_map and not labels.dtype.is_floating:
@@ -95,6 +92,7 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
           preprocess_utils.resolve_shape(labels, 4)[1:3],
           align_corners=True)
       scaled_labels = labels
+      scaled_confidences = confidences
     else:
       # Label is downsampled to the same size as logits.
       # When gt_is_matting_map = true, label downsampling with nearest neighbor
@@ -103,7 +101,7 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
       # interpolation.
       # TODO(huizhongc): Change to bilinear interpolation by processing padded
       # and non-padded label separately.
-      if gt_is_matting_map:
+      if gt_is_matting_map or confidences is not None:
         tf.logging.warning(
             'Label downsampling with nearest neighbor may introduce artifacts.')
 
@@ -111,7 +109,14 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
           labels,
           preprocess_utils.resolve_shape(logits, 4)[1:3],
           align_corners=True)
-
+      
+      if confidences is not None: #TODO: testing
+        scaled_confidences = tf.image.resize_nearest_neighbor(
+            confidences,
+            preprocess_utils.resolve_shape(logits, 4)[1:3],
+            align_corners=True
+        )
+        
     scaled_labels = tf.reshape(scaled_labels, shape=[-1])
     weights = utils.get_label_weight_mask(
         scaled_labels, ignore_label, num_classes, label_weights=loss_weight)
@@ -154,6 +159,9 @@ def add_softmax_cross_entropy_loss_for_each_scale(scales_to_logits,
           logits=logits,
           name='pixel_losses')
       weighted_pixel_losses = tf.multiply(pixel_losses, weights)
+      if confidences is not None:
+        scaled_confidences = tf.reshape(scaled_confidences, shape=[-1])
+        weighted_pixel_losses = tf.multiply(weighted_pixel_losses, scaled_confidences)
 
       if top_k_percent_pixels == 1.0:
         total_loss = tf.reduce_sum(weighted_pixel_losses)

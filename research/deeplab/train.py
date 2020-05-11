@@ -235,10 +235,11 @@ def _build_deeplab(iterator, outputs_to_num_classes, ignore_label):
   # Add name to input and label nodes so we can add to summary.
   samples[common.IMAGE] = tf.identity(samples[common.IMAGE], name=common.IMAGE)
   samples[common.LABEL] = tf.identity(samples[common.LABEL], name=common.LABEL)
-  samples[common.CONFIDENCE] = None
 
   if FLAGS.use_confidence:
     samples[common.CONFIDENCE] = tf.identity(samples[common.CONFIDENCE], name=common.CONFIDENCE)
+  else:
+    samples[common.CONFIDENCE] = None
 
   model_options = common.ModelOptions(
       outputs_to_num_classes=outputs_to_num_classes,
