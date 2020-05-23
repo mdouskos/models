@@ -45,6 +45,7 @@ cd "${CURRENT_DIR}"
 PASCAL_DATASET="${WORK_DIR}/${DATASET_DIR}/${PASCAL_FOLDER}/tfrecord"
 
 # Train 10 iterations.
+# --weight_decay=0.0001 \
 NUM_ITERATIONS=${2}
 python "${WORK_DIR}"/train.py \
   --logtostderr \
@@ -59,7 +60,6 @@ python "${WORK_DIR}"/train.py \
   --train_batch_size=8 \
   --training_number_of_steps="${NUM_ITERATIONS}" \
   --base_learning_rate=0.003 \
-  --weight_decay=0.0001 \
   --use_confidence=false \
   --fine_tune_batch_norm=true \
   --save_summaries_images=false \

@@ -69,7 +69,7 @@ echo "Converting PASCAL VOC 2012 dataset..."
 python ./build_voc2012_data.py \
   --image_folder="${IMAGE_FOLDER}" \
   --semantic_segmentation_folder="${SEMANTIC_SEG_FOLDER}" \
-  --confidences_folder="${CONFIDENCES_FOLDER}" \
   --list_folder="${LIST_FOLDER}" \
   --image_format="jpg" \
   --output_dir="${OUTPUT_DIR}"
+  #  --confidences_folder="${CONFIDENCES_FOLDER}" 
