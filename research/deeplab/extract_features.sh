@@ -48,6 +48,8 @@ python "${WORK_DIR}"/tensor_extractor.py \
     --decoder_output_stride=4 \
     --ext_crop_size="513,513" \
     --ext_tensor_name="concat_projection/Relu" \
+    --save_softmax=true \
+    --save_features=false \
     --checkpoint_dir="${TRAIN_LOGDIR}" \
     --ext_logdir="${EXPORT_DIR}" \
     --dataset_dir="${PASCAL_DATASET}" \
