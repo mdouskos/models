@@ -1,5 +1,20 @@
 #!/bin/bash
 
+display_usage() { 
+	echo -e "\nUsage:\n${0} [experiment_dir] [iterations] <dataset_extension> \n" 
+	} 
+
+if [  $# -le 1 ] 
+then 
+		display_usage
+		exit 1
+fi 
+if [ $# = "--help" ] || [ $# = "-h" ] 
+then 
+		display_usage
+		exit 0
+fi 
+
 # Exit immediately if a command exits with a non-zero status.
 set -e
 

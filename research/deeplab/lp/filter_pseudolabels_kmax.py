@@ -10,7 +10,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import cv2
-
+from tqdm import tqdm
 
 # %%
 sys.path.append('/c/Users/mdous/Repo/personal/graph-label-propagation')
@@ -48,8 +48,11 @@ def scribble_mask(imfile, dist=10, maskSize=5):
     np_im = np.array(im, dtype=np.uint8)
     # scribble_pos = np.asarray(np_im < 255).nonzero()
     np_scribble = np.where(np_im < 255, 0, 255).astype(np.uint8)
-    chamf = cv2.distanceTransform(np_scribble, cv2.DIST_C, maskSize)
-    mask_d = np.where(chamf > dist, False, True)
+    if dist>0:
+        chamf = cv2.distanceTransform(np_scribble, cv2.DIST_C, maskSize)
+        mask_d = np.where(chamf > dist, False, True)
+    else:
+        mask_d = np.where(np_im < 255,True, False)
     return mask_d
 
 
@@ -78,7 +81,7 @@ def filter_label(imfile, mask):
     labelfile = os.path.join(LABEL_PATH, get_filename(imfile) + '_pseudomask.png')
     label = Image.open(labelfile)
     np_label = np.array(label)
-    filtered_label = np_label*mask
+    filtered_label = np.where(mask,np_label,255)
     return filtered_label
 
 def build_conf_dict(np_conf, slic_im):
