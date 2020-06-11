@@ -13,7 +13,8 @@ import cv2
 from tqdm import tqdm
 
 # %%
-sys.path.append('/c/Users/mdous/Repo/personal/graph-label-propagation')
+# sys.path.append('/c/Users/mdous/Repo/personal/graph-label-propagation')
+# Need to have graph-label-propagation in PYTHONPATH to save the images
 import utils.save_annotation as voc_save
 from utils import get_dataset_colormap
 
@@ -22,11 +23,10 @@ from utils import get_dataset_colormap
 flags = {'vis': True, 'save': False}
 if flags['vis']:
     pascal_palette = get_dataset_colormap.create_pascal_label_colormap(256)
-    pascal_palette[-1,:] = [255,255,255]
+    pascal_palette[-1,:] = [255,255,255] # fix ignore color
     pascal_palette = np.squeeze(pascal_palette.reshape((-1,1)))
     pascal_palette = pascal_palette.reshape((-1,3))/255
     pascal_cmap = colors.ListedColormap(pascal_palette, name = 'pascal', N=256)
-    colors.Normalize(vmin = 0, vmax=255)
 
 # %%
 BASE_PATH = '/d/Data/lp_data'
@@ -69,7 +69,7 @@ def valid_superpixels(imfile, mask_d):
 
 
 # %%
-def confidence_mask(imfile, threshold=0.9):
+def confidence_mask(imfile, threshol = 0.9):
     conffile = os.path.join(CONFIDENCE_PATH, os.path.basename(imfile))
     confidence = Image.open(conffile)
     np_conf = np.array(confidence, dtype=np.float)/65535.
@@ -81,7 +81,7 @@ def filter_label(imfile, mask):
     labelfile = os.path.join(LABEL_PATH, get_filename(imfile) + '_pseudomask.png')
     label = Image.open(labelfile)
     np_label = np.array(label)
-    filtered_label = np.where(mask,np_label,255)
+    filtered_label = np.where(mask,np_label, 255)
     return filtered_label
 
 def build_conf_dict(np_conf, slic_im):
@@ -91,7 +91,7 @@ def build_conf_dict(np_conf, slic_im):
         conf_dict[i] = np_conf_flat[np.argmax(slic_im==i)]
     return conf_dict
 
-def get_most_confident_superpixels(imfile, K=10, thres = 0.0):
+def get_most_confident_superpixels(imfile, K = 10, thres = 0.5):
     conffile = os.path.join(CONFIDENCE_PATH, os.path.basename(imfile))
     slpath = os.path.join(SLIC_PATH, get_filename(imfile) + '_slic.npz.npy')
     labelfile = os.path.join(LABEL_PATH, get_filename(imfile) + '_pseudomask.png')
@@ -115,12 +115,16 @@ def get_most_confident_superpixels(imfile, K=10, thres = 0.0):
         val_confs = confs > thres
         confs = confs[val_confs]
         superpixs = superpixs[val_confs]
-        if K < 1:
-            N = np.size(superpixs)
-            Keff = int(K*N)
+        if l == 0:
+            if K < 1:
+                N = np.size(superpixs)
+                Keff = int(K*N)
+            else:
+                Keff = K
+            ind = confs.argsort()[-Keff:]
         else:
-            Keff = K
-        ind = confs.argsort()[-Keff:]
+            ind = range(np.size(superpixs))
+        
         valid_sp += superpixs[ind].tolist()
 
     mask_sp = np.full(slic_im.shape, False, dtype=bool)
@@ -129,24 +133,26 @@ def get_most_confident_superpixels(imfile, K=10, thres = 0.0):
         
     return mask_sp
 
+def parse_arguments():
+    pass
+
 # %%
 if __name__ == "__main__":
     filelist = glob.glob(CONFIDENCE_PATH + "/*.png")
-    for imfile in filelist:
+    for cnt, imfile in enumerate(filelist):
         #mask = confidence_mask(imfile) & valid_superpixels(imfile, scribble_mask(imfile))
-        mask = get_most_confident_superpixels(imfile, 0.6, 0.9)
+        mask = get_most_confident_superpixels(imfile, 0.3, 0.97)
         filtered_label = filter_label(imfile, mask)
         
         if flags['vis']:
             impath = os.path.join(IMAGE_PATH, get_filename(imfile) + '.jpg')
             im = Image.open(impath)
             np_im = np.array(im, dtype=np.uint8)
-            plt.subplot(1,2,1)
+
             plt.imshow(np_im)
             plt.imshow(filtered_label, alpha=0.7, cmap=pascal_cmap, vmin=0, vmax=255)
             
-            plt.subplot(1,2,2)
-            plt.imshow(mask)
+            # plt.savefig('/home/makis/Desktop/host/voc/voc_ex_{}.png'.format(cnt))
             plt.show()
         
         if flags['save']:
