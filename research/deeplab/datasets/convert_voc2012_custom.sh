@@ -32,6 +32,22 @@
 #           + SegmentationClass
 #
 
+
+display_usage() { 
+	echo -e "\nUsage:\n${0} [gt_annotation_folder] [tf_record_folder] \n" 
+	} 
+
+if [  $# -le 1 ] 
+then 
+		display_usage
+		exit 1
+fi 
+if [ $# = "--help" ] || [ $# = "-h" ] 
+then 
+		display_usage
+		exit 0
+fi 
+
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
@@ -63,7 +79,7 @@ mkdir -p "${OUTPUT_DIR}"
 
 IMAGE_FOLDER="${PASCAL_ROOT}/JPEGImages"
 LIST_FOLDER="${PASCAL_ROOT}/ImageSets/SegmentationMin"
-CONFIDENCES_FOLDER="${PASCAL_ROOT}/Confidences"
+#CONFIDENCES_FOLDER="${PASCAL_ROOT}/Confidences"
 
 echo "Converting PASCAL VOC 2012 dataset..."
 python ./build_voc2012_data.py \
