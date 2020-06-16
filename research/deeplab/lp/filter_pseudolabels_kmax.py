@@ -82,7 +82,7 @@ def parse_arguments():
 
 if __name__ == "__main__":
     args = parse_arguments()
-    print(args)
+
     if args.visualize:
         pascal_palette = get_dataset_colormap.create_pascal_label_colormap(256)
         pascal_palette[-1,:] = [255,255,255] # fix ignore color
